@@ -6,7 +6,7 @@ def get_annotations_from_xml(xml_file, label_list):
   """
   :param xml_file: str, path to annotation file in xml format
   :param label_list: list of str, a list of possible labels
-  :return image_size: list, image_size [h, w, c]
+  :return image_size: array, image_size [h, w, c]
   :return labels: np array [num_possible_classes],
           0 for absent, 1 for present, -1 for difficult but present
   :return objects: np array [num_objs, 5],
@@ -24,14 +24,14 @@ def get_annotations_from_xml(xml_file, label_list):
     name = obj.find('name').text
     is_difficult = (int(obj.find('difficult').text) > 0)
     label_index = label_list.index(name)
-    if label_index >= 1 and label_index < len(label_list):
+    if label_index < len(label_list):
       if not is_difficult:
         labels[label_index] = 1
       else:
         if labels[label_index] == 0:
           labels[label_index] = -1
     else:
-      print('Label unfound in valid label list.')
+      print('Label unfound in valid label list: %s'%name)
 
     object = np.zeros((5), dtype=np.int32)
     if is_difficult:
@@ -49,7 +49,7 @@ def get_annotations_from_xml(xml_file, label_list):
     object[4] = xmax
     objects.append(object)
   objects = np.array(objects)
-  return [height, width, channel], labels, objects
+  return np.array([height, width, channel]), labels, objects
 
 
 def get_list_from_file(file):

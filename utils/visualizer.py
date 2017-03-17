@@ -24,8 +24,6 @@ def visualize_heatmap(heatmap):
   :return: visualized image
   """
   minVal, maxVal = np.min(heatmap), np.max(heatmap)
-  if minVal < 0:
-    print 'Error'
   temp = (heatmap - minVal) * 255.0 / (maxVal - minVal)
   temp = cv2.convertScaleAbs(temp)
   temp = cv2.applyColorMap(temp, cv2.COLORMAP_JET)

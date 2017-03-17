@@ -16,9 +16,7 @@ import sys
 import threading
 import scipy.io as sio
 import numpy as np
-import xml.etree.ElementTree as ET
 import tensorflow as tf
-
 
 import data.utils.file_utils as file_utils
 import utils.box_utils as box_utils
