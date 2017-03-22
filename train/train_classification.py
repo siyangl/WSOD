@@ -9,7 +9,8 @@ import tensorflow as tf
 
 from network.vgg import vgg_std
 import data.bbox.image_processing as image_processing
-from data.bbox.esos_dataset import EsosData
+# from data.bbox.datasets import EsosData
+import data.bbox.datasets as datasets
 import train.learning as learning
 
 tf.app.flags.DEFINE_float('learning_rate', 0.0001, 'Learning rate.')
@@ -19,6 +20,11 @@ tf.app.flags.DEFINE_string('pretrained_model', None, 'Initialize with pretrained
 tf.app.flags.DEFINE_string('checkpoint', None, 'Continue training from previous checkpoint')
 tf.app.flags.DEFINE_string('train_dir', './output/debug', 'Training directory')
 
+tf.app.flags.DEFINE_string('dataset_name', None, 'Name of dataset')
+tf.app.flags.DEFINE_string('image_set', 'trainval', 'Subset for training')
+tf.app.flags.DEFINE_string('data_dir', None, 'Dataset directory')
+tf.app.flags.DEFINE_integer('num_train_imgs', None, 'Train set size')
+tf.app.flags.DEFINE_integer('num_test_imgs', None, 'Test set size')
 tf.app.flags.DEFINE_integer('image_size', 224, 'Input image size')
 tf.app.flags.DEFINE_bool('flip_images', False, 'Flip images on the fly left right')
 tf.app.flags.DEFINE_bool('crop_images', False, 'Crop images on the fly, used for classification'
@@ -37,11 +43,13 @@ def main(unused):
   g = tf.Graph()
   with g.as_default(), tf.device('/cpu:0'):
     # dataset
-    dataset = EsosData(subset='train',
-                       datadir='./data/bbox/ESOS',
-                       num_train_imgs=10966,
-                       num_test_imgs=2741)
+    dataset_to_call = getattr(datasets, FLAGS.dataset_name)
+    dataset = dataset_to_call(subset=FLAGS.image_set,
+                              datadir=FLAGS.data_dir,
+                              num_train_imgs=FLAGS.num_train_imgs,
+                              num_test_imgs=FLAGS.num_test_imgs)
     assert dataset.data_files()
+
     images, _, _, labels, _, _, _, _ = image_processing.batch_inputs(dataset,
                                                                   image_size=FLAGS.image_size,
                                                                   flip_image=FLAGS.flip_images,
@@ -107,6 +115,8 @@ def main(unused):
 
 
 if __name__ == '__main__':
+  assert FLAGS.dataset_name, 'Must provide a dataset'
+
   if FLAGS.pretrained_model and FLAGS.checkpoint:
     print('Checkpoint will override pretrained_file!')
   if not FLAGS.pretrained_model and not FLAGS.checkpoint:
