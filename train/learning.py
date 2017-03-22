@@ -67,10 +67,10 @@ def train(graph, logdir,
     assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
 
     if step % log_interval == 0:
-      # examples_per_sec = FLAGS.batch_size / float(duration)
       format_str = ('%s: step %d, loss = %.2f (%.3f sec/batch)')
-      print(format_str % (datetime.now(), step, loss_value, duration))
-      logging.info(format_str % (datetime.now(), step, loss_value, duration))
+      log_str = format_str % (datetime.now(), step, loss_value, duration)
+      print(log_str)
+      logging.info(log_str)
 
     if step % summary_interval == 0:
       summary_str = sess.run(summary_op)
