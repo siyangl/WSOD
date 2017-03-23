@@ -1,16 +1,12 @@
 from __future__ import absolute_import
-import logging
-import time
-import numpy as np
-from datetime import datetime
-import os
-import sys
+
 import tensorflow as tf
 
-from network.vgg import vgg_std
 import data.bbox.image_processing as image_processing
+from network.vgg import vgg_std
+
 # from data.bbox.datasets import EsosData
-import data.bbox.datasets as datasets
+import data.datasets as datasets
 import train.learning as learning
 
 tf.app.flags.DEFINE_float('learning_rate', 0.0001, 'Learning rate.')
@@ -41,28 +37,29 @@ FLAGS = tf.app.flags.FLAGS
 
 def main(unused):
   g = tf.Graph()
-  with g.as_default(), tf.device('/cpu:0'):
-    # dataset
-    dataset_to_call = getattr(datasets, FLAGS.dataset_name)
-    dataset = dataset_to_call(subset=FLAGS.image_set,
-                              datadir=FLAGS.data_dir,
-                              num_train_imgs=FLAGS.num_train_imgs,
-                              num_test_imgs=FLAGS.num_test_imgs)
-    assert dataset.data_files()
+  with g.as_default():
+    with tf.device('/cpu:0'):
+      # dataset
+      dataset_to_call = getattr(datasets, FLAGS.dataset_name)
+      dataset = dataset_to_call(subset=FLAGS.image_set,
+                                datadir=FLAGS.data_dir,
+                                num_train_imgs=FLAGS.num_train_imgs,
+                                num_test_imgs=FLAGS.num_test_imgs)
+      assert dataset.data_files()
 
-    images, _, _, labels, _, _, _, _ = image_processing.batch_inputs(dataset,
-                                                                  image_size=FLAGS.image_size,
-                                                                  flip_image=FLAGS.flip_images,
-                                                                  crop_image=FLAGS.crop_images,
-                                                                  train=True,
-                                                                  batch_size=FLAGS.batch_size)
-    labels = tf.to_float(labels)
+      images, _, _, labels, _, _, _, _ = image_processing.batch_inputs(dataset,
+                                                                    image_size=FLAGS.image_size,
+                                                                    flip_image=FLAGS.flip_images,
+                                                                    crop_image=FLAGS.crop_images,
+                                                                    train=True,
+                                                                    batch_size=FLAGS.batch_size)
+      labels = tf.to_float(labels)
 
 
     with tf.device('/gpu:0'):
       # Build nets
       logits, _ = vgg_std(images, num_classes=dataset.num_classes(),
-                       train=False, dropout=FLAGS.dropout)
+                          train=True, dropout=FLAGS.dropout)
 
       cls_loss = tf.nn.softmax_cross_entropy_with_logits(logits, labels)
       cls_loss = tf.reduce_mean(cls_loss)
