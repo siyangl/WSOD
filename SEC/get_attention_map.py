@@ -10,7 +10,8 @@ import caffe
 
 from utils.visualizer import visualize_heatmap
 from data.utils.file_utils import get_annotations_from_xml, get_list_from_file
-import data.cfg as cfg
+import data.cfg
+import cfg
 
 caffe.set_device(0)
 caffe.set_mode_gpu()
@@ -54,7 +55,7 @@ def main(args):
   net_CAM = caffe.Net(os.path.join(cfg.root_dir, 'SEC', 'deploy.prototxt'),
                       os.path.join(cfg.root_dir, 'SEC', 'weights.caffemodel'),
                       caffe.TEST)
-  data_dir = getattr(cfg, '%s_dir' % args.dataset)
+  data_dir = getattr(data.cfg, '%s_dir' % args.dataset)
   filelist = get_list_from_file(os.path.join(data_dir, 'ImageSets', 'Main', '%s.txt' % args.image_set))
   print 'Num of images', len(filelist)
 
@@ -64,7 +65,7 @@ def main(args):
     W = image.shape[1]
     _, labels, _ = get_annotations_from_xml(os.path.join(data_dir,
                                                          'Annotations', '%s.xml' % file),
-                                            cfg.pascal_classes)
+                                            data.cfg.pascal_classes)
     if np.sum(np.absolute(labels[1:])) > 0:
       print file
 
@@ -79,10 +80,10 @@ def main(args):
           w = params[i - 1]
           heat_maps = np.sum(CAM_scores * w[:, None, None], axis=0)
           if args.result_dir:
-            np.save('%s/%s_%s' % (args.result_dir, file, cfg.pascal_classes[i]), heat_maps)
+            np.save('%s/%s_%s' % (args.result_dir, file, data.cfg.pascal_classes[i]), heat_maps)
           if args.vis_dir:
             vis = visualize_heatmap(np.maximum(heat_maps, 0))
-            cv2.imwrite('%s/%s_%s.png' % (args.vis_dir, file, cfg.pascal_classes[i]), vis)
+            cv2.imwrite('%s/%s_%s.png' % (args.vis_dir, file, data.cfg.pascal_classes[i]), vis)
 
 
 if __name__ == "__main__":

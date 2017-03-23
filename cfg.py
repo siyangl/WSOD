@@ -1,1 +1,1 @@
-ROOT_DIR = '/home/siyang/Workspaces/WSOD'
+root_dir = '/home/siyang/Workspaces/WSOD'
