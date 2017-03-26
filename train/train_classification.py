@@ -1,10 +1,11 @@
 from __future__ import absolute_import
+import numpy as np
 
 import tensorflow as tf
 
 import data.datasets as datasets
 import data.bbox.image_processing as image_processing
-from network.vgg import vgg_std
+import network.vgg as vgg
 import train.learning as learning
 
 tf.app.flags.DEFINE_float('learning_rate', 0.0001, 'Learning rate.')
@@ -23,6 +24,7 @@ tf.app.flags.DEFINE_integer('image_size', 224, 'Input image size')
 tf.app.flags.DEFINE_bool('flip_images', False, 'Flip images on the fly left right')
 tf.app.flags.DEFINE_bool('crop_images', False, 'Crop images on the fly, used for classification'
                                                'training only')
+tf.app.flags.DEFINE_string('network', 'vgg_std', 'vgg_std or vgg_fcn')
 tf.app.flags.DEFINE_bool('multilabel', False, 'The dataset is a multilabel dataset')
 tf.app.flags.DEFINE_bool('dropout', True, 'Use dropout as regulizer')
 tf.app.flags.DEFINE_float('lr_decay', -1, 'Learning rate decay ratio')
@@ -47,23 +49,25 @@ def main(unused):
       assert dataset.data_files()
 
       images, _, _, labels, _, _, _, _ = image_processing.batch_inputs(dataset,
-                                                                    image_size=FLAGS.image_size,
-                                                                    flip_image=FLAGS.flip_images,
-                                                                    crop_image=FLAGS.crop_images,
-                                                                    train=True,
-                                                                    batch_size=FLAGS.batch_size)
+                                                                       image_size=FLAGS.image_size,
+                                                                       flip_image=FLAGS.flip_images,
+                                                                       crop_image=FLAGS.crop_images,
+                                                                       train=True,
+                                                                       batch_size=FLAGS.batch_size)
       labels = tf.to_float(labels)
 
-
+    network_to_call = getattr(vgg, FLAGS.network)
     with tf.device('/gpu:0'):
       # Build nets
-      logits, _ = vgg_std(images, num_classes=dataset.num_classes(),
-                          train=True, dropout=FLAGS.dropout)
+      logits, _ = network_to_call(images, num_classes=dataset.num_classes(),
+                                  train=True, dropout=FLAGS.dropout)
       if not FLAGS.multilabel:
         cls_loss = tf.nn.softmax_cross_entropy_with_logits(logits, labels)
       else:
+        bg_mask = np.expand_dims(np.concatenate([[0], np.ones((dataset.num_classes() - 1))]), 0)
         valid_labels = tf.to_float(tf.greater(labels, -1))
-        valid_labels[:, 0] = 0
+        valid_labels = tf.minimum(valid_labels,
+                                  tf.constant(bg_mask, dtype=tf.float32))
         cls_loss = tf.nn.sigmoid_cross_entropy_with_logits(logits, labels) * valid_labels
       cls_loss = tf.reduce_mean(cls_loss)
       reg_loss = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
