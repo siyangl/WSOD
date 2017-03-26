@@ -19,6 +19,6 @@ python eval/inference_segmentation.py \
 --annotation_dir=../Dataset/VOCdevkit/VOC2007/Annotations_bak_true_anno
 
 python eval/eval_segmentation.py \
---result_dir=${OUTPUT_DIR}/label \
+--seg_dir=${OUTPUT_DIR}/label \
 --annotation_dir=../Dataset/VOCdevkit/VOC2007/Annotations_bak_true_anno \
 --image_list=../Dataset/VOCdevkit/VOC2007/ImageSets/Main/${IMAGE_SET}.txt
