@@ -98,7 +98,7 @@ def vgg_full_conv(inputs, num_classes, train=False, dropout=False, weight_decay=
       net = layers.convolution2d(net, 1024, [3, 3], scope='vgg_16/fc6')
       if dropout and train:
         net = tf.nn.dropout(net, 0.5)
-      net = layers.convolution2d(net, 1024, [1, 1], scope='vgg_16/fc7') # the original model is with [3, 3] kernel
+      net = layers.convolution2d(net, 1024, [3, 3], scope='vgg_16/fc7') # have checkpoint of kernel=1
       if dropout and train:
         net = tf.nn.dropout(net, 0.5)
       net = layers.avg_pool2d(net, [41, 41], padding='VALID', scope='vgg_16/fc7/avg_pool')

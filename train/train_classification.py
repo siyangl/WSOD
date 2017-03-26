@@ -23,6 +23,7 @@ tf.app.flags.DEFINE_integer('image_size', 224, 'Input image size')
 tf.app.flags.DEFINE_bool('flip_images', False, 'Flip images on the fly left right')
 tf.app.flags.DEFINE_bool('crop_images', False, 'Crop images on the fly, used for classification'
                                                'training only')
+tf.app.flags.DEFINE_bool('multilabel', False, 'The dataset is a multilabel dataset')
 tf.app.flags.DEFINE_bool('dropout', True, 'Use dropout as regulizer')
 tf.app.flags.DEFINE_float('lr_decay', -1, 'Learning rate decay ratio')
 tf.app.flags.DEFINE_integer('lr_decay_step', -1, 'Learning rate decay steps')
@@ -58,8 +59,12 @@ def main(unused):
       # Build nets
       logits, _ = vgg_std(images, num_classes=dataset.num_classes(),
                           train=True, dropout=FLAGS.dropout)
-
-      cls_loss = tf.nn.softmax_cross_entropy_with_logits(logits, labels)
+      if not FLAGS.multilabel:
+        cls_loss = tf.nn.softmax_cross_entropy_with_logits(logits, labels)
+      else:
+        valid_labels = tf.to_float(tf.greater(labels, -1))
+        valid_labels[:, 0] = 0
+        cls_loss = tf.nn.sigmoid_cross_entropy_with_logits(logits, labels) * valid_labels
       cls_loss = tf.reduce_mean(cls_loss)
       reg_loss = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
       total_loss = tf.add_n(reg_loss) + cls_loss

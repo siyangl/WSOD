@@ -51,7 +51,7 @@ def preprocess(image, size):
   return image
 
 
-def main(args):
+def main(unused):
   net_CAM = caffe.Net(os.path.join(cfg.root_dir, 'SEC', 'deploy.prototxt'),
                       os.path.join(cfg.root_dir, 'SEC', 'weights.caffemodel'),
                       caffe.TEST)
