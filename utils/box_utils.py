@@ -164,6 +164,8 @@ def bbox_normalize(bboxes, image_size, one_index=False):
 
 
 def get_iou_matrix(gt, det):
+  gt = gt.astype(np.float)
+  det = det.astype(np.float)
   iou_matrix = np.zeros((gt.shape[0], det.shape[0]))
   for g in range(gt.shape[0]):
     gt_dup = np.tile(gt[g], (det.shape[0], 1))
@@ -177,3 +179,16 @@ def get_iou_matrix(gt, det):
     iou = overlap / union
     iou_matrix[g] = iou
   return iou_matrix
+
+
+def boxes_to_seg(boxes, image_size):
+  """
+  Make box annotation to segmentation annotation
+  :param boxes: unnormalized coordinates, zero index, [#boxes, 4], [hmin, wmin, hmax, wmax]
+  :param image_size: [h, w]
+  :return: box_map: segmentation binary map
+  """
+  box_map = np.zeros(image_size, dtype=np.bool)
+  for b in boxes:
+    box_map[b[0]:b[2]+1, b[1]:b[3]+1] = True
+  return box_map
