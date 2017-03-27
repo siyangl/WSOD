@@ -108,7 +108,7 @@ def main(unused):
     variables_to_restore = None
     restore_ckpt = None
     if FLAGS.checkpoint:
-      variables_to_restore = tf.trainable_variables
+      variables_to_restore = tf.trainable_variables()
       restore_ckpt = FLAGS.checkpoint
     elif FLAGS.pretrained_model:
       variables_to_restore = [v for v in tf.trainable_variables()
