@@ -17,7 +17,7 @@ class Pascal(Dataset):
     if num_train_imgs:
       self.num_train_imgs = num_train_imgs
     else:
-      self.num_train_imgs = 5011,
+      self.num_train_imgs = 5011
     if num_test_imgs:
       self.num_test_imgs = num_test_imgs
     else:
