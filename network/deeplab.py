@@ -70,37 +70,3 @@ def deeplab(inputs, num_classes, train=False, dropout=False, weight_decay=0.0005
                                train=train, dropout=dropout,
                                weight_decay=weight_decay)
   return seg, endpoints
-
-
-def vgg_full_conv(inputs, num_classes, train=False, dropout=False, weight_decay=0.0005):
-  with arg_scope([layers.convolution2d, layers.max_pool2d], padding='SAME'):
-    with arg_scope([layers.convolution2d], rate=1,
-                   weights_initializer=tf.truncated_normal_initializer(stddev=0.01),
-                   weights_regularizer=layers.l2_regularizer(weight_decay)):
-      net = layers.convolution2d(inputs, 64, [3, 3], scope='vgg_16/conv1/conv1_1' )
-      net = layers.convolution2d(net, 64, [3, 3], scope='vgg_16/conv1/conv1_2' )
-      net = layers.max_pool2d(net, [2, 2], scope='vgg_16/pool1')
-      net = layers.convolution2d(net, 128, [3, 3], scope='vgg_16/conv2/conv2_1' )
-      net = layers.convolution2d(net, 128, [3, 3], scope='vgg_16/conv2/conv2_2' )
-      net = layers.max_pool2d(net, [2, 2], scope='vgg_16/pool2')
-      net = layers.convolution2d(net, 256, [3, 3], scope='vgg_16/conv3/conv3_1' )
-      net = layers.convolution2d(net, 256, [3, 3], scope='vgg_16/conv3/conv3_2' )
-      net = layers.convolution2d(net, 256, [3, 3], scope='vgg_16/conv3/conv3_3' )
-      net = layers.max_pool2d(net, [2, 2], scope='vgg_16/pool3')
-      net = layers.convolution2d(net, 512, [3, 3], scope='vgg_16/conv4/conv4_1' )
-      net = layers.convolution2d(net, 512, [3, 3], scope='vgg_16/conv4/conv4_2' )
-      net = layers.convolution2d(net, 512, [3, 3], scope='vgg_16/conv4/conv4_3' )
-      # net = layers.max_pool2d(net, [3, 3], 1, scope='vgg_16/pool4')
-      net = layers.convolution2d(net, 512, [3, 3], scope='vgg_16/conv5/conv5_1' )
-      net = layers.convolution2d(net, 512, [3, 3], scope='vgg_16/conv5/conv5_2' )
-      net = layers.convolution2d(net, 512, [3, 3], scope='vgg_16/conv5/conv5_3' )
-
-      net = layers.convolution2d(net, 1024, [3, 3], scope='vgg_16/fc6')
-      if dropout and train:
-        net = tf.nn.dropout(net, 0.5)
-      net = layers.convolution2d(net, 1024, [1, 1], scope='vgg_16/fc7')  # originally kernel=3
-      if dropout and train:
-        net = tf.nn.dropout(net, 0.5)
-      net = layers.avg_pool2d(net, [41, 41], padding='VALID', scope='vgg_16/fc7/avg_pool')
-      net = layers.convolution2d(net, num_classes, [1, 1], activation_fn=None, scope='vgg_16/fc8')
-  return net
