@@ -110,24 +110,3 @@ def vgg_fcn(inputs, num_classes, pool_stride=41, train=False, dropout=False, wei
       endpoints['fc8'] = net
   return net, endpoints
 
-# # conv layers
-# def vgg_conv_multiout(inputs):
-#   with slim.scopes.arg_scope([slim.ops.conv2d, slim.ops.fc], stddev=0.01, weight_decay=0.0005):
-#     net = slim.ops.conv2d(inputs, 64, [3, 3], scope='vgg_16/conv1/conv1_1')
-#     net = slim.ops.conv2d(net, 64, [3, 3], scope='vgg_16/conv1/conv1_2')
-#     pool1 = slim.ops.max_pool(net, [2, 2], scope='vgg_16/pool1')
-#     net = slim.ops.conv2d(pool1, 128, [3, 3], scope='vgg_16/conv2/conv2_1')
-#     net = slim.ops.conv2d(net, 128, [3, 3], scope='vgg_16/conv2/conv2_2')
-#     pool2 = slim.ops.max_pool(net, [2, 2], scope='vgg_16/pool2')
-#     net = slim.ops.conv2d(pool2, 256, [3, 3], scope='vgg_16/conv3/conv3_1')
-#     net = slim.ops.conv2d(net, 256, [3, 3], scope='vgg_16/conv3/conv3_2')
-#     net = slim.ops.conv2d(net, 256, [3, 3], scope='vgg_16/conv3/conv3_3')
-#     pool3 = slim.ops.max_pool(net, [2, 2], scope='vgg_16/pool3')
-#     net = slim.ops.conv2d(pool3, 512, [3, 3], scope='vgg_16/conv4/conv4_1')
-#     net = slim.ops.conv2d(net, 512, [3, 3], scope='vgg_16/conv4/conv4_2')
-#     net = slim.ops.conv2d(net, 512, [3, 3], scope='vgg_16/conv4/conv4_3')
-#     pool4 = slim.ops.max_pool(net, [2, 2], scope='vgg_16/pool4')
-#     net = slim.ops.conv2d(pool4, 512, [3, 3], scope='vgg_16/conv5/conv5_1')
-#     net = slim.ops.conv2d(net, 512, [3, 3], scope='vgg_16/conv5/conv5_2')
-#     pool5 = slim.ops.conv2d(net, 512, [3, 3], scope='vgg_16/conv5/conv5_3')
-#   return pool5, pool4, pool3, pool2, pool1
