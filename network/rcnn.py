@@ -24,7 +24,7 @@ def rcnn(inputs, rois, num_classes, train=False, dropout=False, weight_decay=0.0
   num_rois = rois.get_shape().as_list()[1]
   batch_rois = tf.reshape(rois, [batch_size*num_rois, 4])
   batch_roi_index = tf.reshape(
-          tf.tile(tf.expand_dims(tf.range(batch_size), 0), [num_rois, 1]),
+          tf.transpose(tf.tile(tf.expand_dims(tf.range(batch_size), 0), [num_rois, 1])),
           [batch_size*num_rois])
   roi_features = tf.image.crop_and_resize(features, batch_rois, batch_roi_index, [7, 7])
   endpoints['roi_pool'] = roi_features
@@ -34,5 +34,7 @@ def rcnn(inputs, rois, num_classes, train=False, dropout=False, weight_decay=0.0
                                   train=train,
                                   dropout=dropout,
                                   weight_decay=weight_decay)
+  scores = tf.nn.softmax(logits)
   logits = tf.reshape(logits, [batch_size, num_rois, num_classes])
-  return logits, endpoints
+  scores = tf.reshape(scores, [batch_size, num_rois, num_classes])
+  return logits, scores, endpoints
