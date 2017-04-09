@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 import numpy as np
-
+import math
 import tensorflow as tf
 
 import data.datasets as datasets
@@ -59,7 +59,11 @@ def main(unused):
     network_to_call = getattr(vgg, FLAGS.network)
     with tf.device('/gpu:0'):
       # Build nets
-      logits, _ = network_to_call(images, num_classes=dataset.num_classes(),
+      if FLAGS.network == 'vgg_std':
+        pool_stride = FLAGS.image_size/(16*7)
+      else:
+        pool_stride = math.ceil(FLAGS.image_size/8.)
+      logits, _ = network_to_call(images, num_classes=dataset.num_classes(), pool_stride=pool_stride,
                                   train=True, dropout=FLAGS.dropout)
       if not FLAGS.multilabel:
         cls_loss = tf.nn.softmax_cross_entropy_with_logits(logits, labels)

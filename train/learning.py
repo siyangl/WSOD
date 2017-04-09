@@ -45,6 +45,7 @@ def train(graph, logdir,
   if not sess_config:
     sess_config = tf.ConfigProto()
     sess_config.gpu_options.allow_growth = True
+    sess_config.allow_soft_placement=True
   sess = tf.Session(graph=graph, config=sess_config)
 
   # Init all variables
