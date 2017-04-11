@@ -135,7 +135,6 @@ def batch_inputs(dataset, train=False, flip_image=False, crop_image=False, batch
       dense_coord = tf.sparse_to_dense(coord.indices, [50], coord.values)
       coord_list.append(tf.expand_dims(dense_coord, [1]))
     obj_bbox = tf.concat(1, coord_list)
-    print obj_bbox
 
     coord_list = []
     for coord in proposals:

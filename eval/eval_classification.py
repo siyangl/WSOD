@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 import logging
 import tensorflow as tf
+import math
 
 import data.bbox.image_processing as image_processing
 import data.datasets as datasets
@@ -17,6 +18,7 @@ tf.app.flags.DEFINE_string('checkpoint', None, 'Continue training from previous 
 tf.app.flags.DEFINE_bool('multilabel', False, 'Multi label dataset')
 tf.app.flags.DEFINE_string('network', 'vgg_std', 'vgg_std or vgg_fcn')
 FLAGS = tf.app.flags.FLAGS
+
 
 def main(unused):
   logdir = os.path.dirname(FLAGS.checkpoint)
@@ -37,7 +39,13 @@ def main(unused):
                                                                        train=False,
                                                                        batch_size=FLAGS.batch_size)
     network_to_call = getattr(vgg, FLAGS.network)
-    logits, _ = network_to_call(images, train=False, num_classes=dataset.num_classes())
+    # Build nets
+    if FLAGS.network == 'vgg_std':
+      pool_stride = FLAGS.image_size / (16 * 7)
+    else:
+      pool_stride = math.ceil(FLAGS.image_size / 8.)
+    logits, _ = network_to_call(images, num_classes=dataset.num_classes(), pool_stride=pool_stride,
+                                train=True, dropout=False)
 
     if FLAGS.multilabel:
       scores = tf.sigmoid(logits)
@@ -85,7 +93,6 @@ def main(unused):
     else:
       logging.info("Accuracy: %.3f"%(num_tp/num_gt))
       logging.info("Num salient objects: %d"%num_obj)
-
 
 
 if __name__ == '__main__':
