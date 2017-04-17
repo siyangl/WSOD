@@ -2,7 +2,10 @@ from __future__ import absolute_import
 import tensorflow as tf
 
 import network.vgg as vgg
+from utils.box_utils_tf import bbox_inv_transform, bbox_transform
 
+layers = tf.contrib.layers
+arg_scope = tf.contrib.framework.arg_scope
 
 def rcnn(inputs, rois, num_classes, train=False, dropout=False, weight_decay=0.0005):
   """
@@ -34,7 +37,15 @@ def rcnn(inputs, rois, num_classes, train=False, dropout=False, weight_decay=0.0
                                   train=train,
                                   dropout=dropout,
                                   weight_decay=weight_decay)
+  fc_feature = endpoints['fc7']
+  with arg_scope([layers.fully_connected],
+                 weights_initializer=tf.truncated_normal_initializer(stddev=0.001),
+                 weights_regularizer=layers.l2_regularizer(weight_decay)):
+    net = layers.fully_connected(fc_feature, num_classes*4, activation_fn=None, scope='vgg_16/bboxes')
+    endpoints['bboxes'] = net
+  bboxes_delta = tf.reshape(net, [batch_size, num_rois, num_classes*4])
   scores = tf.nn.softmax(logits)
   logits = tf.reshape(logits, [batch_size, num_rois, num_classes])
   scores = tf.reshape(scores, [batch_size, num_rois, num_classes])
-  return logits, scores, endpoints
+  scores_and_bboxes_delta = [scores, bboxes_delta]
+  return logits, scores_and_bboxes_delta, endpoints

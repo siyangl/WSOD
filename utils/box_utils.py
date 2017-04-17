@@ -181,6 +181,29 @@ def get_iou_matrix(gt, det):
   return iou_matrix
 
 
+def get_iob_matrix(gt, det):
+  gt = gt.astype(np.float)
+  det = det.astype(np.float)
+  # iou_matrix = np.zeros((gt.shape[0], det.shape[0]))
+  iob_matrix1 = np.zeros((gt.shape[0], det.shape[0]))
+  iob_matrix2 = np.zeros((gt.shape[0], det.shape[0]))
+  for g in range(gt.shape[0]):
+    gt_dup = np.tile(gt[g], (det.shape[0], 1))
+    ymin = np.maximum(gt_dup[:, 0], det[:, 0])
+    xmin = np.maximum(gt_dup[:, 1], det[:, 1])
+    ymax = np.minimum(gt_dup[:, 2], det[:, 2])
+    xmax = np.minimum(gt_dup[:, 3], det[:, 3])
+    overlap = np.maximum(0, ymax - ymin) * np.maximum(0, xmax - xmin)
+    # union = (gt_dup[:, 2] - gt_dup[:, 0]) * (gt_dup[:, 3] - gt_dup[:, 1]) + \
+    #         (det[:, 2] - det[:, 0]) * (det[:, 3] - det[:, 1]) - overlap
+    iob1 = overlap / ((gt_dup[:, 2] - gt_dup[:, 0]) * (gt_dup[:, 3] - gt_dup[:, 1]))
+    iob2 = overlap / ((det[:, 2] - det[:, 0]) * (det[:, 3] - det[:, 1])+ 1e-6)
+    # iou_matrix[g] = iou
+    iob_matrix1[g] = iob1
+    iob_matrix2[g] = iob2
+  return iob_matrix1, iob_matrix2
+
+
 def boxes_to_seg(boxes, image_size):
   """
   Make box annotation to segmentation annotation
@@ -191,4 +214,23 @@ def boxes_to_seg(boxes, image_size):
   box_map = np.zeros(image_size, dtype=np.bool)
   for b in boxes:
     box_map[b[0]:b[2]+1, b[1]:b[3]+1] = True
+  return box_map
+
+
+def boxes_to_objectness_map(boxes, box_scores, image_size, use_max=False):
+  """
+  Get objectness map, category-dependent or -independent
+  :param boxes: unnormalized coordinates, zero index, list of array [#boxes, 4], [hmin, wmin, hmax, wmax]
+  :param box_scores: list [#boxes]
+  :param image_size: [h, w]
+  :return: box_map: segmentation binary map
+  """
+  box_map = np.zeros(image_size)
+  if use_max:
+    for b, s in zip(boxes, box_scores):
+      box_map[b[0]:b[2]+1, b[1]:b[3]+1] = np.maximum(box_map[b[0]:b[2]+1, b[1]:b[3]+1], s)
+  else:
+    for b, s in zip(boxes, box_scores):
+      box_map[b[0]:b[2]+1, b[1]:b[3]+1] += s
+  box_map = box_map / np.max(box_map)
   return box_map
